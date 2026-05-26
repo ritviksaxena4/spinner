@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 
 const STORAGE_KEY = 'standup-wheel-data-v1';
 
-const defaultNames = ['Aarav', 'Priya', 'Rahul', 'Sneha', 'Karan', 'Neha'];
+const defaultNames = ['Sandhya', 'Bharani', 'Vivek', 'Revathi', 'Sumit', 'Chanakyan' , 'Prasanna', 'SESHADRI', 'Kiran', 'Priya', 'Sunil', 'Jaya Sai' , 'Jyotika', 'Manwin', 'Ritvik', 'Pratik', 'Sheetal'];
 
 const colors = [
   '#6366F1',
