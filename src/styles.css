@@ -10,6 +10,8 @@
   --secondary-text: #111827;
   --success-bg: #ecfdf3;
   --success-text: #027a48;
+  --highlight: #fef3c7;
+  --highlight-border: #f59e0b;
 }
 
 * {
@@ -159,6 +161,7 @@ input {
   text-align: center;
   transform-origin: bottom center;
   z-index: 2;
+  transition: transform 0.25s ease, filter 0.25s ease;
 }
 
 .segment-label span {
@@ -170,6 +173,13 @@ input {
   font-weight: 700;
   color: #344054;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.selected-segment span {
+  background: var(--highlight);
+  border: 2px solid var(--highlight-border);
+  transform: scale(1.1);
+  box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.18);
 }
 
 .button-row {
@@ -210,6 +220,14 @@ input {
   background: var(--success-bg);
   color: var(--success-text);
   font-weight: 600;
+  width: 100%;
+}
+
+.winner-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 12px;
 }
 
 .side-column {
@@ -257,6 +275,11 @@ input {
   font-size: 18px;
   line-height: 1;
   padding: 0;
+}
+
+.chip-selected {
+  background: #fef3c7;
+  border: 1px solid #f59e0b;
 }
 
 .completed {
