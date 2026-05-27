@@ -19,6 +19,12 @@ const colors = [
   '#F97316',
 ];
 
+const POINTER_ANGLE = 270; // pointer is at top
+
+function normalizeAngle(angle) {
+  return ((angle % 360) + 360) % 360;
+}
+
 function loadData() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -29,6 +35,7 @@ function loadData() {
         lastWinner: '',
       };
     }
+
     const parsed = JSON.parse(raw);
     return {
       activeNames: Array.isArray(parsed.activeNames) ? parsed.activeNames : defaultNames,
@@ -116,12 +123,8 @@ export default function App() {
   const removeName = (name) => {
     setActiveNames((prev) => prev.filter((n) => n !== name));
     setCompletedNames((prev) => prev.filter((n) => n !== name));
-    if (lastWinner === name) {
-      setLastWinner('');
-    }
-    if (selectedName === name) {
-      setSelectedName('');
-    }
+    if (lastWinner === name) setLastWinner('');
+    if (selectedName === name) setSelectedName('');
     setMessage(`${name} removed.`);
   };
 
@@ -141,11 +144,7 @@ export default function App() {
       return;
     }
 
-    setActiveNames((prev) => {
-      if (prev.includes(lastWinner)) return prev;
-      return [...prev, lastWinner];
-    });
-
+    setActiveNames((prev) => (prev.includes(lastWinner) ? prev : [...prev, lastWinner]));
     setCompletedNames((prev) => prev.filter((n) => n !== lastWinner));
     setSelectedName(lastWinner);
     setMessage(`${lastWinner} restored back to the active list.`);
@@ -167,7 +166,6 @@ export default function App() {
     }
 
     const winner = selectedName;
-
     setActiveNames((prev) => prev.filter((n) => n !== winner));
     setCompletedNames((prev) => [winner, ...prev.filter((n) => n !== winner)]);
     setLastWinner(winner);
@@ -189,9 +187,14 @@ export default function App() {
     const sliceAngle = 360 / activeNames.length;
     const spins = 5 + Math.floor(Math.random() * 3);
 
-    // Pointer is at top. We rotate the wheel so the chosen segment lands under it.
-    const targetAngle = 360 - (winnerIndex * sliceAngle + sliceAngle / 2);
-    const finalRotation = 360 * spins + targetAngle;
+    const currentRotation = normalizeAngle(rotation);
+    const winnerCenterAngle = winnerIndex * sliceAngle + sliceAngle / 2;
+
+    // Adjust for current wheel position so the chosen slice lands under the top pointer every time
+    const distanceToPointer =
+      POINTER_ANGLE - winnerCenterAngle - currentRotation;
+
+    const finalRotation = 360 * spins + distanceToPointer;
 
     setRotation((prev) => prev + finalRotation);
 
@@ -229,7 +232,9 @@ export default function App() {
                 style={{
                   background: wheelBackground,
                   transform: `rotate(${rotation}deg)`,
-                  transition: spinning ? 'transform 4s cubic-bezier(0.16, 1, 0.3, 1)' : 'none',
+                  transition: spinning
+                    ? 'transform 4s cubic-bezier(0.16, 1, 0.3, 1)'
+                    : 'none',
                 }}
               >
                 {wheelSegments.length > 0 &&
@@ -243,7 +248,9 @@ export default function App() {
                         key={segment.name}
                         className={`segment-label ${isSelected ? 'selected-segment' : ''}`}
                         style={{
-                          transform: `translate(-50%, -100%) rotate(${angle + slice / 2}deg) translateY(-112px) rotate(${-angle - slice / 2}deg)`,
+                          transform: `translate(-50%, -100%) rotate(${
+                            angle + slice / 2
+                          }deg) translateY(-112px) rotate(${-angle - slice / 2}deg)`,
                         }}
                       >
                         <span>{segment.name}</span>
