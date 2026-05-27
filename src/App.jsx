@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 
-const STORAGE_KEY = 'standup-wheel-data-v1';
+const STORAGE_KEY = 'standup-wheel-data-v2';
 
 const defaultNames = ['Sandhya', 'Bharani', 'Vivek', 'Revathi', 'Sumit', 'Chanakyan' , 'Prasanna', 'SESHADRI', 'Kiran', 'Priya', 'Sunil', 'Jaya Sai' , 'Jyotika', 'Manwin', 'Ritvik', 'Pratik', 'Sheetal'];
+
 
 const colors = [
   '#6366F1',
@@ -51,6 +52,7 @@ export default function App() {
   const [activeNames, setActiveNames] = useState(saved.activeNames);
   const [completedNames, setCompletedNames] = useState(saved.completedNames);
   const [lastWinner, setLastWinner] = useState(saved.lastWinner);
+
   const [rotation, setRotation] = useState(0);
   const [spinning, setSpinning] = useState(false);
   const [selectedName, setSelectedName] = useState('');
@@ -67,10 +69,14 @@ export default function App() {
     );
   }, [activeNames, completedNames, lastWinner]);
 
-  const wheelSegments = useMemo(() => activeNames.map((name, index) => ({
-    name,
-    color: colors[index % colors.length],
-  })), [activeNames]);
+  const wheelSegments = useMemo(
+    () =>
+      activeNames.map((name, index) => ({
+        name,
+        color: colors[index % colors.length],
+      })),
+    [activeNames]
+  );
 
   const wheelBackground = useMemo(() => {
     if (wheelSegments.length === 0) {
@@ -114,6 +120,9 @@ export default function App() {
     if (lastWinner === name) {
       setLastWinner('');
     }
+    if (selectedName === name) {
+      setSelectedName('');
+    }
     setMessage(`${name} removed.`);
   };
 
@@ -127,7 +136,7 @@ export default function App() {
     setMessage('All names restored to the active wheel.');
   };
 
-  const resetDay = () => {
+  const resetLastWinner = () => {
     if (!lastWinner) {
       setMessage('No winner to restore yet.');
       return;
@@ -139,9 +148,31 @@ export default function App() {
     });
 
     setCompletedNames((prev) => prev.filter((n) => n !== lastWinner));
-    setSelectedName('');
+    setSelectedName(lastWinner);
     setMessage(`${lastWinner} restored back to the active list.`);
     setLastWinner('');
+  };
+
+  const keepWinnerInWheel = () => {
+    if (!selectedName) {
+      setMessage('No selected name to keep.');
+      return;
+    }
+    setMessage(`${selectedName} stays in the wheel for the next round.`);
+  };
+
+  const removeWinnerFromNextRound = () => {
+    if (!selectedName) {
+      setMessage('No selected name to remove.');
+      return;
+    }
+
+    const winner = selectedName;
+
+    setActiveNames((prev) => prev.filter((n) => n !== winner));
+    setCompletedNames((prev) => [winner, ...prev.filter((n) => n !== winner)]);
+    setLastWinner(winner);
+    setMessage(`${winner} removed from the next round.`);
   };
 
   const spinWheel = () => {
@@ -153,11 +184,15 @@ export default function App() {
     }
 
     setSpinning(true);
+    setMessage('Spinning the wheel...');
 
     const winnerIndex = Math.floor(Math.random() * activeNames.length);
     const sliceAngle = 360 / activeNames.length;
     const spins = 5 + Math.floor(Math.random() * 3);
-    const finalRotation = 360 * spins + (360 - winnerIndex * sliceAngle - sliceAngle / 2);
+
+    // Pointer is at top. We rotate the wheel so the chosen segment lands under it.
+    const targetAngle = 360 - (winnerIndex * sliceAngle + sliceAngle / 2);
+    const finalRotation = 360 * spins + targetAngle;
 
     setRotation((prev) => prev + finalRotation);
 
@@ -165,10 +200,8 @@ export default function App() {
       const winner = activeNames[winnerIndex];
       setSelectedName(winner);
       setLastWinner(winner);
-      setActiveNames((prev) => prev.filter((n) => n !== winner));
-      setCompletedNames((prev) => [winner, ...prev]);
-      setMessage(`Today's standup: ${winner}`);
       setSpinning(false);
+      setMessage(`${winner} is selected. Choose whether to keep or remove them.`);
     }, 4000);
   };
 
@@ -179,7 +212,7 @@ export default function App() {
           <div>
             <h1>Standup Wheel</h1>
             <p>
-              Add names, spin the wheel, and automatically remove the person who did today’s standup.
+              Add names, spin the wheel, and let the pointer land on today’s standup person.
             </p>
           </div>
           <div className="status-box">{message}</div>
@@ -204,11 +237,12 @@ export default function App() {
                   wheelSegments.map((segment, index) => {
                     const slice = 360 / wheelSegments.length;
                     const angle = index * slice;
+                    const isSelected = segment.name === selectedName;
 
                     return (
                       <div
                         key={segment.name}
-                        className="segment-label"
+                        className={`segment-label ${isSelected ? 'selected-segment' : ''}`}
                         style={{
                           transform: `translate(-50%, -100%) rotate(${angle + slice / 2}deg) translateY(-112px) rotate(${-angle - slice / 2}deg)`,
                         }}
@@ -232,7 +266,7 @@ export default function App() {
               <button className="secondary" onClick={restoreAll}>
                 Restore all
               </button>
-              <button className="secondary" onClick={resetDay}>
+              <button className="secondary" onClick={resetLastWinner}>
                 Restore last winner
               </button>
             </div>
@@ -240,6 +274,14 @@ export default function App() {
             {selectedName && (
               <div className="winner-box">
                 <strong>Selected:</strong> {selectedName}
+                <div className="winner-actions">
+                  <button className="primary" onClick={keepWinnerInWheel}>
+                    Keep in wheel
+                  </button>
+                  <button className="secondary" onClick={removeWinnerFromNextRound}>
+                    Remove from next round
+                  </button>
+                </div>
               </div>
             )}
           </section>
@@ -270,7 +312,10 @@ export default function App() {
                   <span className="muted">No active names left.</span>
                 ) : (
                   activeNames.map((name) => (
-                    <span key={name} className="chip">
+                    <span
+                      key={name}
+                      className={`chip ${name === selectedName ? 'chip-selected' : ''}`}
+                    >
                       {name}
                       <button onClick={() => removeName(name)} aria-label={`Remove ${name}`}>
                         ×
