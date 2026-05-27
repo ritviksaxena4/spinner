@@ -19,7 +19,7 @@ const colors = [
   '#F97316',
 ];
 
-const POINTER_ANGLE = 270; // pointer is at top
+const POINTER_ANGLE = 0; // top of the wheel
 
 function normalizeAngle(angle) {
   return ((angle % 360) + 360) % 360;
@@ -190,9 +190,8 @@ export default function App() {
     const currentRotation = normalizeAngle(rotation);
     const winnerCenterAngle = winnerIndex * sliceAngle + sliceAngle / 2;
 
-    // Adjust for current wheel position so the chosen slice lands under the top pointer every time
-    const distanceToPointer =
-      POINTER_ANGLE - winnerCenterAngle - currentRotation;
+    // Pointer is at the TOP, so the winner center must land at 0°
+    const distanceToPointer = POINTER_ANGLE - winnerCenterAngle - currentRotation;
 
     const finalRotation = 360 * spins + distanceToPointer;
 
