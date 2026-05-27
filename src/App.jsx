@@ -4,7 +4,6 @@ const STORAGE_KEY = 'standup-wheel-data-v2';
 
 const defaultNames = ['Sandhya', 'Bharani', 'Vivek', 'Revathi', 'Sumit', 'Chanakyan' , 'Prasanna', 'SESHADRI', 'Kiran', 'Priya', 'Sunil', 'Jaya Sai' , 'Jyotika', 'Manwin', 'Ritvik', 'Pratik', 'Sheetal'];
 
-
 const colors = [
   '#6366F1',
   '#8B5CF6',
